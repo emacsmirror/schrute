@@ -54,6 +54,19 @@
 (defvar-local schrute--time-last-command (current-time) "Time of invocation for `last-command'.")
 (defvar schrute--interesting-commands nil "List of commands we care about.  Generated when `schrute-mode' is activated.")
 
+(defun schrute--run-command ()
+  "Helper that will run an alternative-command."
+  (let* ((alternative-command)
+         (command-list))
+    (dolist (elem schrute-shortcuts-commands)
+      (setf alternative-command (car elem))
+      (setf command-list (cadr elem))
+      (when (or (member this-command command-list)
+               (eq this-command command-list))
+        (funcall-interactively alternative-command)))))
+
+(defun schrute--do-nothing ()
+  "Does nothing; use instead of `ignore'.")
 
 (define-minor-mode schrute-mode "Waste less time using efficient commands by using inefficient ones."
   :lighter " 🐻"
@@ -91,13 +104,6 @@ same command and use the alternative command instead."
   (when (> schrute--times-last-command 2)
     (setf schrute--times-last-command 0)
     ;; Call the alternative command for `this-command'
-    (let* ((alternative-command)
-           (command-list))
-      (dolist (elem schrute-shortcuts-commands)
-        (setf alternative-command (car elem))
-        (setf command-list (cadr elem))
-        (when (or (member this-command command-list)
-                 (eq this-command command-list))
-          (funcall alternative-command))))))
+    (ignore-errors (schrute--run-command))))
 
 ;;; schrute.el ends here
