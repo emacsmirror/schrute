@@ -8,7 +8,7 @@ If this package isn't on Melpa. Just clone it somewhere and add the file path lo
 
     (require 'schrute)
 
-    (setf schrute-shortcuts-commands '((next-line . avy-goto-line)
-                                       (previous-line . avy-goto-line)))
+    (setf schrute-shortcuts-commands '((avy-goto-line   . (next-line previous-line))
+                                       (avy-goto-word-1 . (left-char right-char))))
 
     (schrute-mode)

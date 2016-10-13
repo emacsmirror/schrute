@@ -1,5 +1,5 @@
 ;;; Directory Local Variables
 ;;; For more information see (info "(emacs) Directory Variables")
 
-(("emacs-lisp-mode"
+((emacs-lisp-mode
   (flycheck-disabled-checkers . nil)))
