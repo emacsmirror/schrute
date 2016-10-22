@@ -1,11 +1,11 @@
-;;; schrute.el --- waste less time using efficient commands by using inefficient ones.
+;;; schrute.el --- Help you remember there is a better way to do something.
 
 ;; Copyright (C) 2016 Jorge Araya Navarro
 
 ;; Author: Jorge Araya Navarro <elcorreo@deshackra.com>
 ;; Keywords: convenience
-;; Package-Requires: ((emacs "24.4"))
-;; Package-Version: 0.1
+;; Package-Requires: ((emacs "22.2"))
+;; Package-Version: 0.2
 ;; Homepage: https://bitbucket.org/shackra/dwight-k.-schrute
 
 ;; This file is not part of GNU Emacs.
@@ -25,7 +25,25 @@
 
 ;;; Commentary:
 
-;; schrute.el is the main file of the project
+;; Fact: There is a way to do something faster, but you forgot.
+;;
+;; Dwight K. Schrute-mode or `schrute-mode` for short, is a minor global mode
+;; that will help you to remember that there is a better way to do
+;; something.  By better I mean using commands like `avy-goto-line` instead of
+;; making several invocations of `next-line` in a row with either `C-<down>` or
+;; `C-n` keybindings.  If your memory is like mine, you'll often forget those
+;; features are available, if you commit the mistake of taking the long route,
+;; `schrute-mode` will be there to save the day... just don't forget to
+;; configure it!.
+;;
+;; How to configure
+;;
+;; add something like this to your Emacs configuration:
+;;
+;; (setf schrute-shortcuts-commands '((avy-goto-line   . (next-line previous-line))
+;;                                    (avy-goto-word-1 . (left-char right-char))))
+;;
+;; (schrute-mode) ;; and turn on the minor mode.
 
 ;;; Prayer:
 
@@ -44,15 +62,30 @@
 
 ;;; Code:
 
-(defgroup schrute nil "waste less time using efficient commands by using inefficient ones"
+(defgroup schrute nil "Help you remember there is a better way to do something"
   :group 'convenience)
 
-(defcustom schrute-shortcuts-commands nil "Command that will be use instead of the command invoked multiple times by the user."
+(defcustom schrute-shortcuts-commands nil
+  "Command that will be use instead of the command invoked multiple times by the user."
   :type 'list :group 'schrute)
+
+(defcustom schrute-time-passed 0.5
+  "Maximum period of time to count command repetitions."
+  :type 'float :group 'schrute)
+
+(defcustom schrute-command-repetitions 3
+  "Number of repetitions before calling the alternative command.  There is no constrains if you set this variable to 0."
+  :type 'integer :group 'schrute)
 
 (defvar-local schrute--times-last-command 0 "Times the same command have been invoke.")
 (defvar-local schrute--time-last-command (current-time) "Time of invocation for `last-command'.")
 (defvar schrute--interesting-commands nil "List of commands we care about.  Generated when `schrute-mode' is activated.")
+
+(defun schrute--call-until-success (cmd)
+  "Call command `CMD' until the user comply with the input required."
+  (when (not (ignore-errors (call-interactively cmd) t))
+    (discard-input)
+    (schrute--call-until-success cmd)))
 
 (defun schrute--run-command ()
   "Helper that will run an alternative-command."
@@ -63,24 +96,17 @@
       (setf command-list (cadr elem))
       (when (or (member this-command command-list)
                (eq this-command command-list))
-        (funcall-interactively alternative-command)))))
+        (schrute--call-until-success alternative-command)))))
 
-(defun schrute--do-nothing ()
-  "Does nothing; use instead of `ignore'.")
-
-(define-minor-mode schrute-mode "Waste less time using efficient commands by using inefficient ones."
-  :lighter " 🐻"
+(define-minor-mode schrute-mode "Help you remember there is a better way to do something."
+  :lighter " 🐻 "
   :group 'schrute
   :global t
-  (schrute-mode-activate (not schrute-mode)))
+  (schrute-mode-activate))
 
-(defun schrute-mode-activate (&optional turnoff)
-  "Do some setup when the global minor mode is activated.
-
-`TURNOFF' simply removes the function from the `post-command-hook'"
-  (if turnoff
-      (remove-hook 'post-command-hook 'schrute-check-last-command)
-    (add-hook 'post-command-hook #'schrute-check-last-command))
+(defun schrute-mode-activate ()
+  "Do some setup when the global minor mode is activated."
+  (add-hook 'post-command-hook #'schrute-check-last-command)
   ;; regenerate the list of commands we are interested
   (let* ((elemen)
          (command-list))
@@ -95,15 +121,19 @@
 
 It also check the time between the last two invocations of the
 same command and use the alternative command instead."
-  (when (eq this-command last-command)
-    (if (member this-command schrute--interesting-commands)
-        (let* ((time-passed (float-time (time-subtract (current-time) schrute--time-last-command))))
-          (if (<= time-passed 1.0)
-              (setf schrute--times-last-command (1+ schrute--times-last-command)))
-          (setf schrute--time-last-command (current-time)))))
-  (when (> schrute--times-last-command 2)
-    (setf schrute--times-last-command 0)
-    ;; Call the alternative command for `this-command'
-    (ignore-errors (schrute--run-command))))
+  (with-local-quit
+    ;; be sure to do the checking when there are commands set, the minor mode
+    ;; is on and the buffer the cursor is not inside the mini buffer.
+    (when (and  schrute--interesting-commands schrute-mode (not (string-match-p " \\*Minibuf-[0-1]+\\*" (buffer-name))))
+      (when (eq this-command last-command)
+        (if (member this-command schrute--interesting-commands)
+            (let* ((time-passed (float-time (time-subtract (current-time) schrute--time-last-command))))
+              (if (<= time-passed schrute-time-passed)
+                  (setf schrute--times-last-command (1+ schrute--times-last-command)))
+              (setf schrute--time-last-command (current-time)))))
+      (when (> schrute--times-last-command schrute-command-repetitions)
+        (setf schrute--times-last-command 0)
+        ;; Call the alternative command for `this-command'
+        (schrute--run-command)))))
 
 ;;; schrute.el ends here
