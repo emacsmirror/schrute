@@ -98,8 +98,9 @@
                (eq this-command command-list))
         (schrute--call-until-success alternative-command)))))
 
+;;;###autoload
 (define-minor-mode schrute-mode "Help you remember there is a better way to do something."
-  :lighter " 🐻 "
+  :lighter " Bear"
   :group 'schrute
   :global t
   (schrute-mode-activate))
@@ -116,6 +117,7 @@
       (cond ((symbolp command-list) (push command-list schrute--interesting-commands))
             ((listp command-list) (setf schrute--interesting-commands (append schrute--interesting-commands command-list)))))))
 
+;;;###autoload
 (defun schrute-check-last-command ()
   "Check what command was used last time.
 
@@ -135,5 +137,7 @@ same command and use the alternative command instead."
         (setf schrute--times-last-command 0)
         ;; Call the alternative command for `this-command'
         (schrute--run-command)))))
+
+(provide 'schrute)
 
 ;;; schrute.el ends here
