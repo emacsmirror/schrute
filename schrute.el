@@ -132,7 +132,7 @@ same command and use the alternative command instead."
   (with-local-quit
     ;; be sure to do the checking when there are commands set, the minor mode
     ;; is on and the buffer the cursor is not inside the mini buffer.
-    (when (and  schrute--interesting-commands schrute-mode (not (string-match-p " \\*Minibuf-[0-1]+\\*" (buffer-name))))
+    (when (and schrute--interesting-commands schrute-mode (not (minibufferp)))
       (when (eq this-command last-command)
         (if (member this-command schrute--interesting-commands)
             (let* ((time-passed (float-time (time-subtract (current-time) schrute--time-last-command))))
