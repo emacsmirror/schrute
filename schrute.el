@@ -4,7 +4,7 @@
 
 ;; Author: Jorge Araya Navarro <elcorreo@deshackra.com>
 ;; Keywords: convenience
-;; Package-Requires: ((emacs "22.2"))
+;; Package-Requires: ((emacs "24.3"))
 ;; Package-Version: 0.2
 ;; Homepage: https://bitbucket.org/shackra/dwight-k.-schrute
 
@@ -77,6 +77,10 @@
   "Number of repetitions before calling the alternative command.  There is no constrains if you set this variable to 0."
   :type 'integer :group 'schrute)
 
+(defcustom schrute-lighter " Schrute"
+  "Lighter for the minor mode.  Use a bear emoji if you can!"
+  :type 'string :group 'schrute)
+
 (defvar-local schrute--times-last-command 0 "Times the same command have been invoke.")
 (defvar-local schrute--time-last-command (current-time) "Time of invocation for `last-command'.")
 (defvar schrute--interesting-commands nil "List of commands we care about.  Generated when `schrute-mode' is activated.")
@@ -100,14 +104,16 @@
 
 ;;;###autoload
 (define-minor-mode schrute-mode "Help you remember there is a better way to do something."
-  :lighter " Bear"
+  :lighter schrute-lighter
   :group 'schrute
   :global t
   (schrute-mode-activate))
 
 (defun schrute-mode-activate ()
   "Do some setup when the global minor mode is activated."
-  (add-hook 'post-command-hook #'schrute-check-last-command)
+  (if schrute-mode
+      (add-hook 'post-command-hook #'schrute-check-last-command)
+    (remove-hook 'post-command-hook 'schrute-check-last-command))
   ;; regenerate the list of commands we are interested
   (let* ((elemen)
          (command-list))
