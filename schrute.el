@@ -5,7 +5,7 @@
 ;; Author: Jorge Araya Navarro <elcorreo@deshackra.com>
 ;; Keywords: convenience
 ;; Package-Requires: ((emacs "24.3"))
-;; Package-Version: 0.2
+;; Package-Version: 0.2.2
 ;; Homepage: https://bitbucket.org/shackra/dwight-k.-schrute
 
 ;; This file is not part of GNU Emacs.
@@ -97,7 +97,7 @@
          (command-list))
     (dolist (elem schrute-shortcuts-commands)
       (setf alternative-command (car elem))
-      (setf command-list (cadr elem))
+      (setf command-list (cdr elem))
       (when (or (member this-command command-list)
                (eq this-command command-list))
         (schrute--call-until-success alternative-command)))))
@@ -119,7 +119,7 @@
          (command-list))
     (setf schrute--interesting-commands nil)
     (dolist (elemen schrute-shortcuts-commands)
-      (setf command-list (cadr elemen))
+      (setf command-list (cdr elemen))
       (cond ((symbolp command-list) (push command-list schrute--interesting-commands))
             ((listp command-list) (setf schrute--interesting-commands (append schrute--interesting-commands command-list)))))))
 
