@@ -14,3 +14,9 @@ If this package isn't on Melpa. Just clone it somewhere and add the file path lo
                                        (avy-goto-word-1 . (left-char right-char))))
 
     (schrute-mode)
+
+## Be aware!!
+
+Some functions in Emacs will throw an error if they can't complete a task, this feature is part of their design, which may enter in conflict with schrute-mode functionality of "trying the command again until success". One of these commands is `next-line` which throws an error if they reach the button of the current buffer.
+
+This major mode will tell you when a function is causing the error `"Lisp nesting exceeds ‘max-lisp-eval-depth’"` so you can fix it. See issue #1 for more information.
