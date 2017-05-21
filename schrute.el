@@ -125,6 +125,12 @@
 
 ;;;###autoload
 (defun schrute-check-last-command ()
+  "Catch errors when running `schrute-check-last-command-1'."
+  (condition-case err
+      (schrute-check-last-command-1)
+    (error (message "schrute-check-last-command-1: %s" (error-message-string err)))))
+
+(defun schrute-check-last-command-1 ()
   "Check what command was used last time.
 
 It also check the time between the last two invocations of the
@@ -135,7 +141,7 @@ same command and use the alternative command instead."
     (when (and schrute--interesting-commands schrute-mode (not (minibufferp)))
       (when (eq this-command last-command)
         (if (member this-command schrute--interesting-commands)
-            (let* ((time-passed (float-time (time-subtract (current-time) schrute--time-last-command))))
+            (let ((time-passed (float-time (time-subtract (current-time) schrute--time-last-command))))
               (if (<= time-passed schrute-time-passed)
                   (setf schrute--times-last-command (1+ schrute--times-last-command)))
               (setf schrute--time-last-command (current-time)))))
